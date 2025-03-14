@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý File</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-gray-700 mb-4">Quản lý File</h1>
+
+        <!-- 🔍 Tìm kiếm File -->
+        <h2 class="text-xl font-semibold text-gray-700 mt-4">Tìm kiếm File</h2>
+        <div class="flex gap-2">
+            <input id="searchInput" type="text" placeholder="Nhập từ khóa..." 
+                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+            <button onclick="searchFiles()" 
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Tìm kiếm</button>
+        </div>
+        <div id="result" class="mt-4"></div>
+
+        <!-- 📤 Upload File -->
+        <h2 class="text-xl font-semibold text-gray-700 mt-6">Tải Lên File</h2>
+        <input type="file" id="fileInput" class="mt-2 block w-full border p-2">
+        <input type="text" id="uploadPath" placeholder="Nhập thư mục (mặc định: uploads)" 
+               class="mt-2 block w-full border p-2">
+        <button onclick="uploadFile()" 
+                class="bg-green-500 text-white px-4 py-2 mt-2 rounded-lg hover:bg-green-600">Upload</button>
+
+        <!-- 🔀 Chuyển File Đến Máy Remote -->
+        <h2 class="text-xl font-semibold text-gray-700 mt-6">Chuyển File đến Máy Remote</h2>
+        <input type="file" id="remoteFileInput" class="mt-2 block w-full border p-2">
+        <button onclick="transferFile()" 
+                class="bg-purple-500 text-white px-4 py-2 mt-2 rounded-lg hover:bg-purple-600">Chuyển File</button>
+    </div>
+
+    <script>
+        // 🟢 Tìm kiếm file
+        async function searchFiles() {
+            const keyword = document.getElementById("searchInput").value.trim();
+            if (keyword === "") {
+                alert("Vui lòng nhập từ khóa tìm kiếm!");
+                return;
+            }
+
+            const response = await fetch(`http://localhost:9090/search?keyword=${encodeURIComponent(keyword)}`);
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "";
+
+            if (!response.ok) {
+                resultDiv.innerHTML = `<p class="text-red-500 mt-2">Không tìm thấy file nào.</p>`;
+                return;
+            }
+
+            const data = await response.json();
+            if (data.files && data.files.length > 0) {
+                const list = document.createElement("ul");
+                list.classList.add("mt-2", "space-y-2");
+
+                data.files.forEach(file => {
+                    const fileName = file.split('/').pop();
+                    const listItem = document.createElement("li");
+                    listItem.innerHTML = `<a href="http://localhost:9090/download/${encodeURIComponent(file)}"
+                                          class="text-blue-500 hover:underline" download>${fileName}</a>`;
+                    list.appendChild(listItem);
+                });
+
+                resultDiv.appendChild(list);
+            } else {
+                resultDiv.innerHTML = `<p class="text-red-500 mt-2">Không tìm thấy file nào.</p>`;
+            }
+        }
+
+        // 🟢 Upload file
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput").files[0];
+            const uploadPath = document.getElementById("uploadPath").value.trim() || "uploads";
+
+            if (!fileInput) {
+                alert("Vui lòng chọn file!");
+                return;
+            }
+
+            // Nếu người dùng không nhập, mặc định là "uploads"
+            if (uploadPath === "") {
+                uploadPath = "uploads";
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+
+            // Tạo URL động theo thư mục
+            const apiURL = `http://localhost:9090/file/${encodeURIComponent(uploadPath)}`;
+
+            try {
+                const response = await fetch(apiURL, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                console.error("Lỗi upload:", error);
+                alert("Lỗi khi tải file lên");
+            }
+        }
+
+        // 🟢 Chuyển file đến máy remote
+        async function transferFile() {
+            const fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) {
+                alert("Vui lòng chọn file!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+
+            try {
+                const response = await fetch("http://localhost:9090/transfer", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+                console.log("API Response:", result);  // In response để kiểm tra lỗi
+
+                if (!response.ok) {
+                    throw new Error(result.error || "Lỗi không xác định khi chuyển file");
+                }
+
+                alert("Chuyển file thành công!");
+            } catch (error) {
+                console.error("Lỗi chuyển file:", error);
+                alert("Lỗi chuyển file: " + error.message);
+            }
+        }
+
+    </script>
+</body>
+</html>

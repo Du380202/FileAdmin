@@ -1,0 +1,11 @@
+server:
+  port: ":9090"
+
+storage:
+  uploadPath: "uploads"
+
+scp:
+  remoteHost: "localhost"
+  remotePort: "2222"
+  username: "root"
+  remotePath: "/root/"

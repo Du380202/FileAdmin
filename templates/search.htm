@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm file</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-gray-700 mb-4">Tìm kiếm file</h1>
+        <div class="flex gap-2">
+            <input id="searchInput" type="text" placeholder="Nhập từ khóa..."
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button onclick="searchFiles()"
+                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Tìm kiếm</button>
+        </div>
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <script>
+        async function searchFiles() {
+            const keyword = document.getElementById("searchInput").value.trim();
+            if (keyword === "") {
+                alert("Vui lòng nhập từ khóa tìm kiếm!");
+                return;
+            }
+    
+            const response = await fetch(`http://localhost:9090/search?keyword=${encodeURIComponent(keyword)}`);
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = ""; // Xóa kết quả cũ
+    
+            if (!response.ok) {
+                resultDiv.innerHTML = `<p class="text-red-500 mt-2">Không tìm thấy file nào.</p>`;
+                return;
+            }
+    
+            const data = await response.json();
+            if (data.files && data.files.length > 0) {
+                const list = document.createElement("ul");
+                list.classList.add("mt-2", "space-y-2");
+    
+                data.files.forEach(file => {
+                    const fileName = file.split('/').pop(); // Chỉ lấy tên file, bỏ đi 'uploads/'
+                    const listItem = document.createElement("li");
+                    listItem.innerHTML = `<a href="http://localhost:9090/download/${encodeURIComponent(file)}"
+                                          class="text-blue-500 hover:underline" download>${fileName}</a>`;
+                    list.appendChild(listItem);
+                });
+    
+                resultDiv.appendChild(list);
+            } else {
+                resultDiv.innerHTML = `<p class="text-red-500 mt-2">Không tìm thấy file nào.</p>`;
+            }
+        }
+    </script>
+    
+</body>
+</html>
