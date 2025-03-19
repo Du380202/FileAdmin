@@ -1,7 +1,9 @@
 package service
 
 import (
+	"backend/config"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,8 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-const uploadDir = "./uploads"
 
 func GetFile(c *gin.Context) {
 	files, err := os.ReadDir("uploads")
@@ -31,34 +31,34 @@ func GetFile(c *gin.Context) {
 
 func DownloadFile(c *gin.Context) {
 	fileName := c.Param("filename") // Lấy tên file từ request
-	filePath := filepath.Join(uploadDir, fileName)
+	filePath := filepath.Join(config.AppConfig.Storage.UploadPath, fileName)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) { // Kiểm tra file có tồn tại hay không
 		c.JSON(http.StatusNotFound, gin.H{"error": "File không tồn tại"})
 		return
 	}
 
-	//Cấu hình header khi tải file
+	// Cấu hình header để trình duyệt hiểu rằng đây là file cần tải về
 	c.Header("Content-Disposition", "attachment; filename="+fileName) //
 	c.Header("Content-Type", "application/octet-stream")
 	c.File(filePath)
 }
 func SearchFile(c *gin.Context) {
-	keyword := c.Query("keyword")
+	keyword := c.Query("keyword") // Lấy từ khóa tìm kiếm từ query string
 
 	if keyword == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng cung cấp từ khóa tìm kiếm"})
 		return
 	}
 
-	files, err := os.ReadDir("uploads")
+	files, err := os.ReadDir("uploads") // Đọc danh sách file trong thư mục "uploads"
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi đọc thư mục"})
 		return
 	}
 
 	var matchedFiles []string
-
+	// Lặp qua danh sách file để tìm file có chứa từ khóa
 	for _, file := range files {
 		if strings.Contains(strings.ToLower(file.Name()), strings.ToLower(keyword)) {
 			matchedFiles = append(matchedFiles, file.Name())
@@ -66,11 +66,18 @@ func SearchFile(c *gin.Context) {
 	}
 
 	if len(matchedFiles) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Không tìm thấy file nào"})
+		c.JSON(http.StatusNotFound, gin.H{
+			"message":     "Không tìm thấy file nào",
+			"status_code": http.StatusNotFound,
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"files": matchedFiles})
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "Danh sách file trùng với từ khóa",
+		"files":       matchedFiles,
+		"status_code": http.StatusOK,
+	})
 }
 
 func UploadFile(c *gin.Context) {
@@ -86,7 +93,7 @@ func UploadFile(c *gin.Context) {
 	// Lấy đường dẫn thư mục từ đường dẫn, nếu không có thì mặc định là uploads
 	userDir := c.PostForm("path")
 	if userDir == "" {
-		userDir = "uploads"
+		userDir = config.AppConfig.Storage.UploadPath
 	}
 
 	userDir = filepath.Clean(userDir)
@@ -97,16 +104,26 @@ func UploadFile(c *gin.Context) {
 		})
 		return
 	}
-	// kiểm tra xem đường dẫn đã tồn tại hay chưa, nếu chưa thì tạo mới
-	if _, err := os.Stat(userDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(userDir, os.ModePerm); err != nil {
+	if _, err := os.Stat(userDir); err != nil {
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(userDir, os.ModePerm); err != nil {
+				log.Println("Lỗi tạo thư mục:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error":       fmt.Sprintf("Không thể tạo thư mục: %v", err),
+					"status_code": http.StatusInternalServerError,
+				})
+				return
+			}
+		} else {
+			log.Println("Lỗi kiểm tra thư mục:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":       "Không thể tạo thư mục",
+				"error":       fmt.Sprintf("Lỗi kiểm tra thư mục: %v", err),
 				"status_code": http.StatusInternalServerError,
 			})
 			return
 		}
 	}
+
 	//Xây dựng đường dẫn lưu file
 	filePath := filepath.Join(userDir, file.Filename)
 

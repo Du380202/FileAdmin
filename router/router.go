@@ -16,11 +16,11 @@ func SetupRouter() *gin.Engine {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
-
-	r.POST("/file/:path", api.UploadFileHandler)
-	r.GET("/download/:filename", api.DownloadFileHandler)
+	r.POST("/file/transfer", api.TransferFileHandler)
+	r.POST("/file/upload", api.UploadFileHandler)
+	r.GET("/file/download/:filename", api.DownloadFileHandler)
 	r.GET("/file", api.GetFileHandler)
-	r.GET("/search", api.SearchFileHandler)
-	r.POST("/transfer", api.TransferFileHandler)
+	r.GET("/file/search", api.SearchFileHandler)
+
 	return r
 }

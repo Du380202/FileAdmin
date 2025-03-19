@@ -44,7 +44,7 @@
                 return;
             }
 
-            const response = await fetch(`http://localhost:9090/search?keyword=${encodeURIComponent(keyword)}`);
+            const response = await fetch(`http://localhost:9090/file/search?keyword=${encodeURIComponent(keyword)}`);
             const resultDiv = document.getElementById("result");
             resultDiv.innerHTML = "";
 
@@ -61,7 +61,7 @@
                 data.files.forEach(file => {
                     const fileName = file.split('/').pop();
                     const listItem = document.createElement("li");
-                    listItem.innerHTML = `<a href="http://localhost:9090/download/${encodeURIComponent(file)}"
+                    listItem.innerHTML = `<a href="http://localhost:9090/file/download/${encodeURIComponent(file)}"
                                           class="text-blue-500 hover:underline" download>${fileName}</a>`;
                     list.appendChild(listItem);
                 });
@@ -89,9 +89,10 @@
 
             const formData = new FormData();
             formData.append("file", fileInput);
-
+            formData.append("path", uploadPath)
+            console.log(uploadPath)
             // Tạo URL động theo thư mục
-            const apiURL = `http://localhost:9090/file/${encodeURIComponent(uploadPath)}`;
+            const apiURL = `http://localhost:9090/file/upload`;
 
             try {
                 const response = await fetch(apiURL, {
@@ -109,7 +110,7 @@
 
         // 🟢 Chuyển file đến máy remote
         async function transferFile() {
-            const fileInput = document.getElementById("fileInput").files[0];
+            const fileInput = document.getElementById("remoteFileInput").files[0];
             if (!fileInput) {
                 alert("Vui lòng chọn file!");
                 return;
@@ -119,16 +120,18 @@
             formData.append("file", fileInput);
 
             try {
-                const response = await fetch("http://localhost:9090/transfer", {
+                const response = await fetch("http://localhost:9090/file/transfer", {
                     method: "POST",
-                    body: formData
+                    body: formData,
                 });
 
                 const result = await response.json();
                 console.log("API Response:", result);  // In response để kiểm tra lỗi
 
                 if (!response.ok) {
-                    throw new Error(result.error || "Lỗi không xác định khi chuyển file");
+                    console.error("Response status:", response.status);
+                    console.error("Full response:", result);
+                    throw new Error(result.message || "Lỗi không xác định khi chuyển file");
                 }
 
                 alert("Chuyển file thành công!");
@@ -137,7 +140,6 @@
                 alert("Lỗi chuyển file: " + error.message);
             }
         }
-
     </script>
 </body>
 </html>
