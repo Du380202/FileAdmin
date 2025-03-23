@@ -104,7 +104,7 @@ func UploadFile(c *gin.Context) {
 		})
 		return
 	}
-	if !utils.CheckFolder(userDir) {
+	if ok, err := utils.CheckFolder(config.AppConfig.Storage.UploadPath); !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":       fmt.Sprintf("Không thể tạo thư mục: %v", err),
 			"status_code": http.StatusInternalServerError,

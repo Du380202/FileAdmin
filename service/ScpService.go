@@ -47,7 +47,7 @@ func TransferFile(c *gin.Context) {
 		remotePort = config.AppConfig.SCP.RemotePort
 	}
 
-	ok, err := utils.CheckFolder(config.AppConfig.Storage.UploadPath); !ok {
+	if ok, err := utils.CheckFolder(config.AppConfig.Storage.UploadPath); !ok {
 		utils.ErrorResponse(c, fmt.Sprintf("Không thể tạo thư mục uploads: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
