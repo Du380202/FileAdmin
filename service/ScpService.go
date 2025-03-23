@@ -3,34 +3,28 @@ package service
 import (
 	"fmt"
 	"io"
-	"log"
+
+	// "log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 
 	"backend/config"
+	"backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Ghi log lỗi SCP vào file error.log
-func logError(message string, err error, output string) {
-	f, _ := os.OpenFile("error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	defer f.Close()
-	logger := log.New(f, "SCP_ERROR: ", log.LstdFlags)
-	logger.Println(message, err.Error(), output)
-}
-
 // Hàm thực hiện lệnh SCP để chuyển file lên máy chủ từ xa
-func scpFile(localFile, remoteFile string) error {
-	cmd := exec.Command("scp", "-P", config.AppConfig.SCP.RemotePort, localFile, // Tạo lệnh SCP
+func scpFile(localFile, remoteFile string, remotePort string) error {
+	cmd := exec.Command("scp", "-P", remotePort, localFile, // Tạo lệnh SCP
 		fmt.Sprintf("%s@%s:%s", config.AppConfig.SCP.Username, config.AppConfig.SCP.RemoteHost, remoteFile))
 
 	// Thực thi lệnh SCP và lấy đầu ra (bao gồm lỗi nếu có)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logError("Lỗi thực thi scp:", err, "")
+		// logError("Lỗi thực thi scp:", err, "")
 		return fmt.Errorf("SCP thất bại: %s - %s", err.Error(), string(output))
 	}
 	return nil
@@ -41,16 +35,21 @@ func TransferFile(c *gin.Context) {
 	// Lấy file từ request
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Không thể đọc file"})
+		// c.JSON(http.StatusBadRequest, gin.H{"error": "Không thể đọc file"})
+		// utils.ErrorResponse("Không thể đọc file", http.StatusBadRequest, nil)
 		return
 	}
 	defer file.Close() // Đảm bảo file sẽ được đóng sau khi xử lý xong
-	// Đảm bảo thư mục uploads tồn tại
-	if _, err := os.Stat(config.AppConfig.Storage.UploadPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(config.AppConfig.Storage.UploadPath, os.ModePerm); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo thư mục uploads"})
-			return
-		}
+
+	remotePort := c.PostForm("port")
+	remotePath := c.PostForm("path")
+	if remotePort == "" {
+		remotePort = config.AppConfig.SCP.RemotePort
+	}
+
+	ok, err := utils.CheckFolder(config.AppConfig.Storage.UploadPath); !ok {
+		utils.ErrorResponse(c, fmt.Sprintf("Không thể tạo thư mục uploads: %s", err.Error()), http.StatusInternalServerError, nil)
+		return
 	}
 	// Xây dựng đường dẫn lưu file cục bộ (local)
 	localFilePath := filepath.Join(config.AppConfig.Storage.UploadPath, header.Filename)
@@ -58,7 +57,7 @@ func TransferFile(c *gin.Context) {
 	// Tạo file cục bộ để lưu trữ tạm thời
 	outFile, err := os.Create(localFilePath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo file tạm"})
+		utils.ErrorResponse(c, fmt.Sprintf("Không thể tạo file tạm", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -66,32 +65,23 @@ func TransferFile(c *gin.Context) {
 	_, err = io.Copy(outFile, file)
 	outFile.Close()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message":     "Lỗi khi lưu file",
-			"status_code": http.StatusInternalServerError,
-		})
+		utils.ErrorResponse(c, fmt.Sprintf("Lỗi khi lưu file", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
 
 	// Xây dựng đường dẫn file trên server từ xa (remote)
-	remoteFilePath := filepath.Join(config.AppConfig.SCP.RemotePath, header.Filename)
-
+	remoteFilePath := filepath.Join(remotePath, header.Filename)
+	fmt.Println(remoteFilePath)
 	// Gọi hàm SCP để chuyển file lên máy chủ từ xa
-	err = scpFile(localFilePath, remoteFilePath)
+	err = scpFile(localFilePath, remoteFilePath, remotePort)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ErrorResponse(c, fmt.Sprintf("SCP thất bại: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
 	// Xóa file tạm sau khi SCP thành công
 	if err := os.Remove(localFilePath); err != nil {
-		logError("Lỗi khi xóa file tạm:", err, "")
+		// logError("Lỗi khi xóa file tạm:", err, "")
 	}
-
-	// Trả về kết quả nếu chuyển file thành công
-	c.JSON(http.StatusOK, gin.H{
-		"message":     "File đã chuyển thành công",
-		"remote_path": remoteFilePath,
-		"status_code": http.StatusOK,
-	})
+	utils.SuccessResponse(c, "File đã chuyển thành công", http.StatusOK, gin.H{"remote_path": remoteFilePath})
 
 }

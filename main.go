@@ -11,7 +11,10 @@ import (
 func main() {
 	config.LoadConfig()
 
-	r := router.SetupRouter()
+	r := router.SetupRouter(
+		&router.SCPRouter{},
+		&router.FileRouter{},
+	)
 
 	port := config.AppConfig.Server.Port
 	server := &http.Server{

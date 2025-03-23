@@ -2,3 +2,10 @@ SCP_ERROR: 2025/03/18 11:36:47 Lỗi khi xóa file tạm: remove uploads\HuynhTr
 SCP_ERROR: 2025/03/18 11:39:53 Lỗi khi xóa file tạm: remove uploads\TranVanDu_CV (8).pdf: The process cannot access the file because it is being used by another process. 
 SCP_ERROR: 2025/03/18 21:37:02 Lỗi thực thi scp: exit status 255 
 SCP_ERROR: 2025/03/19 10:40:03 Lỗi thực thi scp: exit status 1 
+SCP_ERROR: 2025/03/19 14:07:14 Lỗi thực thi scp: exit status 255 
+SCP_ERROR: 2025/03/20 09:07:36 Lỗi thực thi scp: exit status 255 
+SCP_ERROR: 2025/03/20 20:22:24 Lỗi thực thi scp: exit status 255 
+SCP_ERROR: 2025/03/20 21:03:28 Lỗi thực thi scp: exit status 255 
+SCP_ERROR: 2025/03/20 21:03:48 Lỗi thực thi scp: exit status 255 
+SCP_ERROR: 2025/03/20 21:08:42 Lỗi thực thi scp: exit status 255 
+SCP_ERROR: 2025/03/20 21:09:03 Lỗi thực thi scp: exit status 255 

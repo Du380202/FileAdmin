@@ -2,8 +2,8 @@ package service
 
 import (
 	"backend/config"
+	"backend/utils"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -104,26 +104,12 @@ func UploadFile(c *gin.Context) {
 		})
 		return
 	}
-	if _, err := os.Stat(userDir); err != nil {
-		if os.IsNotExist(err) {
-			if err := os.MkdirAll(userDir, os.ModePerm); err != nil {
-				log.Println("Lỗi tạo thư mục:", err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"error":       fmt.Sprintf("Không thể tạo thư mục: %v", err),
-					"status_code": http.StatusInternalServerError,
-				})
-				return
-			}
-		} else {
-			log.Println("Lỗi kiểm tra thư mục:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":       fmt.Sprintf("Lỗi kiểm tra thư mục: %v", err),
-				"status_code": http.StatusInternalServerError,
-			})
-			return
-		}
+	if !utils.CheckFolder(userDir) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":       fmt.Sprintf("Không thể tạo thư mục: %v", err),
+			"status_code": http.StatusInternalServerError,
+		})
 	}
-
 	//Xây dựng đường dẫn lưu file
 	filePath := filepath.Join(userDir, file.Filename)
 

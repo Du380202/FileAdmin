@@ -108,38 +108,39 @@
             }
         }
 
-        // 🟢 Chuyển file đến máy remote
         async function transferFile() {
             const fileInput = document.getElementById("remoteFileInput").files[0];
             if (!fileInput) {
                 alert("Vui lòng chọn file!");
                 return;
-            }
+            }   
 
             const formData = new FormData();
             formData.append("file", fileInput);
-
-            try {
-                const response = await fetch("http://localhost:9090/file/transfer", {
+            const apiURLTranfer = `http://localhost:9090/file/transfer`;
+                const response = await fetch(apiURLTranfer, {
                     method: "POST",
                     body: formData,
                 });
+                alert("Chuyển file thành công")
+                // if (!response.ok) {
+                //     throw new Error(`Lỗi HTTP: ${response.status}`);
+                // }
+                // console.log(await response.text()); // In response ra console để debug
 
-                const result = await response.json();
-                console.log("API Response:", result);  // In response để kiểm tra lỗi
-
-                if (!response.ok) {
-                    console.error("Response status:", response.status);
-                    console.error("Full response:", result);
-                    throw new Error(result.message || "Lỗi không xác định khi chuyển file");
-                }
-
-                alert("Chuyển file thành công!");
-            } catch (error) {
-                console.error("Lỗi chuyển file:", error);
-                alert("Lỗi chuyển file: " + error.message);
-            }
+                // const contentType = response.headers.get("content-type");
+                // if (contentType && contentType.includes("application/json")) {
+                //     const result = await response.json();
+                //     document.getElementById("status").innerText = result.message;
+                // } else {
+                //     const textResult = await response.text(); // Nếu không phải JSON, hiển thị dạng text
+                //     document.getElementById("status").innerText = textResult;
+                // }
+    
         }
+
+
+
     </script>
 </body>
 </html>
