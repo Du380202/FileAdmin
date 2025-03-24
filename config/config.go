@@ -8,9 +8,10 @@ import (
 
 // Định nghĩa cấu trúc Config chứa thông tin cấu hình cho server và storage
 type Config struct {
-	Server  ServerConfig  // Cấu hình server (port)
-	Storage StorageConfig // Cấu hình lưu trữ (đường dẫn upload)
-	SCP     SCPConfig
+	Server   ServerConfig  // Cấu hình server (port)
+	Storage  StorageConfig // Cấu hình lưu trữ (đường dẫn upload)
+	SCP      SCPConfig
+	Database DatabaseConfig
 }
 
 // Cấu trúc cấu hình cho server
@@ -28,6 +29,14 @@ type SCPConfig struct {
 	RemotePort string // Cổng SSH (thường là 22)
 	Username   string // Tên đăng nhập SSH
 	RemotePath string // Đường dẫn thư mục trên máy chủ đích
+}
+
+type DatabaseConfig struct {
+	Project    string
+	Username   string
+	Password   string
+	DbName     string
+	Collection string
 }
 
 // Biến toàn cục lưu trữ cấu hình của ứng dụng

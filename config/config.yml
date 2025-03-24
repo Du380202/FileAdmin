@@ -1,0 +1,18 @@
+server:
+  port: ":9090"
+
+storage:
+  uploadPath: "uploads"
+
+scp:
+  remoteHost: "localhost"
+  remotePort: "2222"
+  username: "root"
+  remotePath: "/root/"
+
+database:
+  project: "FileSystem"
+  username: "dutran3802"
+  password: "TranDu3802"
+  dbName: "FileDatabase"
+  collection: "UserCollection"

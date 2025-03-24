@@ -10,7 +10,7 @@ import (
 
 func main() {
 	config.LoadConfig()
-
+	config.ConnectMongoDB()
 	r := router.SetupRouter(
 		&router.SCPRouter{},
 		&router.FileRouter{},

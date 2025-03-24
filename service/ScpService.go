@@ -35,8 +35,7 @@ func TransferFile(c *gin.Context) {
 	// Lấy file từ request
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		// c.JSON(http.StatusBadRequest, gin.H{"error": "Không thể đọc file"})
-		// utils.ErrorResponse("Không thể đọc file", http.StatusBadRequest, nil)
+		utils.ErrorResponse(c, fmt.Sprintf("Không thể đọc file %s", err.Error()), http.StatusBadRequest, nil)
 		return
 	}
 	defer file.Close() // Đảm bảo file sẽ được đóng sau khi xử lý xong
@@ -57,7 +56,7 @@ func TransferFile(c *gin.Context) {
 	// Tạo file cục bộ để lưu trữ tạm thời
 	outFile, err := os.Create(localFilePath)
 	if err != nil {
-		utils.ErrorResponse(c, fmt.Sprintf("Không thể tạo file tạm", err.Error()), http.StatusInternalServerError, nil)
+		utils.ErrorResponse(c, fmt.Sprintf("Không thể tạo file tạm: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -65,7 +64,7 @@ func TransferFile(c *gin.Context) {
 	_, err = io.Copy(outFile, file)
 	outFile.Close()
 	if err != nil {
-		utils.ErrorResponse(c, fmt.Sprintf("Lỗi khi lưu file", err.Error()), http.StatusInternalServerError, nil)
+		utils.ErrorResponse(c, fmt.Sprintf("Lỗi khi lưu file: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
 
