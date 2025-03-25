@@ -1,0 +1,22 @@
+server:
+  port: ":9090"
+
+storage:
+  uploadPath: "uploads"
+
+scp:
+  remoteHost: "192.168.35.12"
+  remotePort: "2222"
+  username: "root"
+
+database:
+  project: "FileSystem"
+  username: "dutran3802"
+  password: "TranDu3802"
+  dbName: "FileDatabase"
+  collection: "UserCollection"
+
+jwt:
+  secretKey: "u5cSFPfL4qttU29QZpSv2lMgUZjR3dIAPpUfPxMVNrM"
+  time: 24
+  

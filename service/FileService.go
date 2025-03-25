@@ -31,8 +31,12 @@ func GetFile(c *gin.Context) {
 
 func DownloadFile(c *gin.Context) {
 	fileName := c.Param("filename") // Lấy tên file từ request
-	filePath := filepath.Join(config.AppConfig.Storage.UploadPath, fileName)
-
+	pathSearch := c.Param("path")
+	filePath := filepath.Join(pathSearch, fileName)
+	if _, err := os.Stat(pathSearch); os.IsNotExist(err) {
+		utils.ErrorResponse(c, "Đường dẫn không tồn tại", http.StatusBadRequest, nil)
+		return
+	}
 	if _, err := os.Stat(filePath); os.IsNotExist(err) { // Kiểm tra file có tồn tại hay không
 		utils.ErrorResponse(c, "File không tồn tại", http.StatusNotFound, nil)
 		return
@@ -43,15 +47,26 @@ func DownloadFile(c *gin.Context) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.File(filePath)
 }
+
 func SearchFile(c *gin.Context) {
 	keyword := c.Query("keyword") // Lấy từ khóa tìm kiếm từ query string
-
+	pathSearch := c.Query("path")
 	if keyword == "" {
 		utils.ErrorResponse(c, "Vui lòng cung cấp từ khóa tìm kiếm", http.StatusBadRequest, nil)
 		return
 	}
 
-	files, err := os.ReadDir("uploads") // Đọc danh sách file trong thư mục "uploads"
+	if pathSearch == "" {
+		utils.ErrorResponse(c, "Vui lòng cung cấp đường dẫn tìm kiếm", http.StatusBadRequest, nil)
+		return
+	}
+
+	if _, err := os.Stat(pathSearch); os.IsNotExist(err) {
+		utils.ErrorResponse(c, "Đường dẫn tìm kiếm không tồn tại", http.StatusBadRequest, nil)
+		return
+	}
+
+	files, err := os.ReadDir(pathSearch) // Đọc danh sách file trong thư mục do người dùng cung cấp
 	if err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("Lỗi khi đọc thư mục: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
@@ -69,12 +84,6 @@ func SearchFile(c *gin.Context) {
 		utils.ErrorResponse(c, "Không tìm thấy file nào", http.StatusNotFound, nil)
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message":     "Danh sách file trùng với từ khóa",
-		"files":       matchedFiles,
-		"status_code": http.StatusOK,
-	})
 
 	utils.SuccessResponse(c, "Danh sách file trùng với từ khóa", http.StatusOK, gin.H{"files": matchedFiles})
 }

@@ -17,9 +17,9 @@ import (
 )
 
 // Hàm thực hiện lệnh SCP để chuyển file lên máy chủ từ xa
-func scpFile(localFile, remoteFile string, remotePort string) error {
+func scpFile(localFile, remoteFile string, remotePort string, remoteHost string) error {
 	cmd := exec.Command("scp", "-P", remotePort, localFile, // Tạo lệnh SCP
-		fmt.Sprintf("%s@%s:%s", config.AppConfig.SCP.Username, config.AppConfig.SCP.RemoteHost, remoteFile))
+		fmt.Sprintf("%s@%s:%s", config.AppConfig.SCP.Username, remoteHost, remoteFile))
 
 	// Thực thi lệnh SCP và lấy đầu ra (bao gồm lỗi nếu có)
 	output, err := cmd.CombinedOutput()
@@ -39,7 +39,7 @@ func TransferFile(c *gin.Context) {
 		return
 	}
 	defer file.Close() // Đảm bảo file sẽ được đóng sau khi xử lý xong
-
+	remoteHost := c.PostForm("host")
 	remotePort := c.PostForm("port")
 	remotePath := c.PostForm("path")
 	if remotePort == "" {
@@ -72,7 +72,7 @@ func TransferFile(c *gin.Context) {
 	remoteFilePath := filepath.Join(remotePath, header.Filename)
 	fmt.Println(remoteFilePath)
 	// Gọi hàm SCP để chuyển file lên máy chủ từ xa
-	err = scpFile(localFilePath, remoteFilePath, remotePort)
+	err = scpFile(localFilePath, remoteFilePath, remotePort, remoteHost)
 	if err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("SCP thất bại: %s", err.Error()), http.StatusInternalServerError, nil)
 		return

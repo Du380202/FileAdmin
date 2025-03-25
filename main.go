@@ -14,6 +14,7 @@ func main() {
 	r := router.SetupRouter(
 		&router.SCPRouter{},
 		&router.FileRouter{},
+		&router.UserRouter{},
 	)
 
 	port := config.AppConfig.Server.Port

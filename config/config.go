@@ -28,7 +28,6 @@ type SCPConfig struct {
 	RemoteHost string // Địa chỉ máy chủ từ xa
 	RemotePort string // Cổng SSH (thường là 22)
 	Username   string // Tên đăng nhập SSH
-	RemotePath string // Đường dẫn thư mục trên máy chủ đích
 }
 
 type DatabaseConfig struct {
