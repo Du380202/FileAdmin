@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"backend/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -40,7 +41,8 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Thiếu Authorization header"})
+			// c.JSON(http.StatusUnauthorized, gin.H{"error": "Chức năng này cần đăng nhập"})
+			utils.ErrorResponse(c, "Chức năng này cần đăng nhập", http.StatusUnauthorized, nil)
 			c.Abort()
 			return
 		}
@@ -54,7 +56,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token không hợp lệ"})
+			utils.ErrorResponse(c, "Token không hợp lệ hoặc đã hết hạn", http.StatusUnauthorized, nil)
 			c.Abort()
 			return
 		}
@@ -62,6 +64,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Lỗi xác thực"})
+			utils.ErrorResponse(c, "Lỗi xác thực", http.StatusUnauthorized, nil)
 			c.Abort()
 			return
 		}

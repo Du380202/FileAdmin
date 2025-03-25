@@ -8,6 +8,7 @@ scp:
   remoteHost: "192.168.35.12"
   remotePort: "2222"
   username: "root"
+  remotePath: "/root/"
 
 database:
   project: "FileSystem"
