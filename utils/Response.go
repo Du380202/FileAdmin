@@ -2,8 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,13 +32,4 @@ func SuccessResponse(c *gin.Context, message string, statusCode int, data interf
 		Data:       data,
 		StatusCode: statusCode,
 	})
-}
-
-// Ghi log lỗi SCP vào file error.log
-func logError(message string, err error, output string, statusCode int) {
-
-	f, _ := os.OpenFile("error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	defer f.Close()
-	logger := log.New(f, "ERROR: ", log.LstdFlags)
-	logger.Println(message, err.Error(), output)
 }
