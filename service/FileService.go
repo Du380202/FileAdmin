@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -128,7 +129,11 @@ func UploadFile(c *gin.Context) {
 	}
 	//Xây dựng đường dẫn lưu file
 	filePath := filepath.Join(userDir, file.Filename)
-
+	if _, err := os.Stat(filePath); err == nil {
+		timestamp := time.Now().Format("20060102_150405")
+		newFileName := fmt.Sprintf("%s_%s%s", strings.TrimSuffix(file.Filename, ext), timestamp, ext)
+		filePath = filepath.Join(userDir, newFileName)
+	}
 	//Lưu file vào đường dẫn chỉ định
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("Không thể lưu file: %s", err.Error()), http.StatusInternalServerError, nil)

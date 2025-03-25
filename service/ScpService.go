@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"io"
+	"time"
 
 	// "log"
 	"net/http"
@@ -74,6 +75,7 @@ func TransferFile(c *gin.Context) {
 
 	// Xây dựng đường dẫn file trên server từ xa (remote)
 	remoteFilePath := filepath.Join(remotePath, header.Filename)
+	remoteFilePath = remoteFilePath + "_" + time.Now().Format("20060102_150405")
 	fmt.Println(remoteFilePath)
 	// Gọi hàm SCP để chuyển file lên máy chủ từ xa
 	err = scpFile(localFilePath, remoteFilePath, remotePort, remoteHost)
