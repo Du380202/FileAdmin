@@ -3,16 +3,21 @@ package router
 import (
 	"backend/api"
 	"backend/middleware"
+	"backend/setup"
 
 	"github.com/gin-gonic/gin"
 )
 
-type SCPRouter struct{}
+func init() {
+	RegisterRouter(setup.R)
+}
 
-func (scp *SCPRouter) RegisterRouter(r *gin.Engine) {
+func RegisterRouter(r *gin.Engine) {
 	scpGroup := r.Group("/scp")
 	scpGroup.Use(middleware.JWTAuthMiddleware())
 	{
 		scpGroup.POST("/transfer", api.TransferFileHandler)
 	}
 }
+
+

@@ -2,13 +2,16 @@ package router
 
 import (
 	"backend/api"
+	"backend/setup"
 
 	"github.com/gin-gonic/gin"
 )
 
-type FileRouter struct{}
+func init() {
+	RegisterFileRouter(setup.R)
+}
 
-func (s *FileRouter) RegisterRouter(r *gin.Engine) {
+func RegisterFileRouter(r *gin.Engine) {
 	fileGroup := r.Group("/file")
 	{
 		fileGroup.GET("/search", api.SearchFileHandler)

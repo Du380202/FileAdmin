@@ -2,7 +2,8 @@ package main
 
 import (
 	"backend/config"
-	"backend/router"
+	_ "backend/router"
+	"backend/setup"
 	"log"
 	"net/http"
 	"time"
@@ -11,16 +12,11 @@ import (
 func main() {
 	config.LoadConfig()
 	config.ConnectMongoDB()
-	r := router.SetupRouter(
-		&router.SCPRouter{},
-		&router.FileRouter{},
-		&router.UserRouter{},
-	)
 
 	port := config.AppConfig.Server.Port
 	server := &http.Server{
 		Addr:         port,
-		Handler:      r,
+		Handler:      setup.R,
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 10,
 	}

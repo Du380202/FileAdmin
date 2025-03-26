@@ -2,13 +2,16 @@ package router
 
 import (
 	"backend/api"
+	"backend/setup"
 
 	"github.com/gin-gonic/gin"
 )
 
-type UserRouter struct{}
+func init() {
+	RegisterUserRouter(setup.R)
+}
 
-func (user *UserRouter) RegisterRouter(r *gin.Engine) {
+func RegisterUserRouter(r *gin.Engine) {
 	userGroup := r.Group("/user")
 	{
 		userGroup.POST("/register", api.RegisterHandler)
