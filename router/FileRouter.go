@@ -14,7 +14,9 @@ func init() {
 func RegisterFileRouter(r *gin.Engine) {
 	fileGroup := r.Group("/file")
 	{
+		fileGroup.GET("/", api.GetFileHandler)
 		fileGroup.GET("/search", api.SearchFileHandler)
+		fileGroup.GET("/fulltext", api.FullTextSearchHandler)
 		fileGroup.GET("/download/:path/:filename", api.DownloadFileHandler)
 		fileGroup.POST("/upload", api.UploadFileHandler)
 	}

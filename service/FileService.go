@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/config"
+	"backend/models"
 	"backend/utils"
 	"fmt"
 	"net/http"
@@ -14,15 +15,9 @@ import (
 )
 
 func GetFile(c *gin.Context) {
-	files, err := os.ReadDir("uploads")
-	if err != nil {
-		fmt.Println("Lỗi:", err)
-		return
-	}
-	var allFile []string
-	for _, file := range files {
-		allFile = append(allFile, file.Name())
-	}
+	var allFile []models.File
+	db := config.GetDB()
+	db.Raw("SELECT * FROM files").Scan(&allFile)
 
 	c.JSON(http.StatusOK, gin.H{
 		"file":        allFile,
@@ -90,7 +85,7 @@ func SearchFile(c *gin.Context) {
 }
 
 func UploadFile(c *gin.Context) {
-	file, err := c.FormFile("file") // lấy file từ request
+	file, err := c.FormFile("file")
 	if err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("Không thể lấy file: %s", err.Error()), http.StatusBadRequest, nil)
 		return
@@ -106,40 +101,60 @@ func UploadFile(c *gin.Context) {
 		".docx": true,
 	}
 
-	// Lấy phần mở rộng của file
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if !allowedExtensions[ext] {
-		utils.ErrorResponse(c, "Định dạng file không được phép. Chỉ hỗ trợ pdf, png, jpg, jpeg, txt", http.StatusBadRequest, nil)
+		utils.ErrorResponse(c, "Định dạng file không được phép. Chỉ hỗ trợ pdf, png, jpg, jpeg, txt, doc, docx", http.StatusBadRequest, nil)
 		return
 	}
 
-	// Lấy đường dẫn thư mục từ đường dẫn, nếu không có thì mặc định là uploads
 	userDir := c.PostForm("path")
+	content := c.PostForm("content")
 	if userDir == "" {
 		userDir = config.AppConfig.Storage.UploadPath
 	}
 
 	userDir = filepath.Clean(userDir)
-	if strings.Contains(userDir, "..") { // ngăn chặn đường dẫn không hợp lệ
+	if strings.Contains(userDir, "..") {
 		utils.ErrorResponse(c, "Thư mục không hợp lệ", http.StatusBadRequest, nil)
 		return
 	}
-	if ok, err := utils.CheckFolder(config.AppConfig.Storage.UploadPath); !ok {
+
+	if ok, err := utils.CheckFolder(userDir); !ok {
 		utils.ErrorResponse(c, fmt.Sprintf("Không thể tạo thư mục: %s", err.Error()), http.StatusInternalServerError, nil)
+		return
 	}
-	//Xây dựng đường dẫn lưu file
+
 	filePath := filepath.Join(userDir, file.Filename)
 	if _, err := os.Stat(filePath); err == nil {
 		timestamp := time.Now().Format("20060102_150405")
 		newFileName := fmt.Sprintf("%s_%s%s", strings.TrimSuffix(file.Filename, ext), timestamp, ext)
 		filePath = filepath.Join(userDir, newFileName)
 	}
-	//Lưu file vào đường dẫn chỉ định
+
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("Không thể lưu file: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
 
-	// Thông báo trả về kết quả nếu upload thành công
-	utils.SuccessResponse(c, "Tải lên thành công", http.StatusOK, gin.H{"path": filePath})
+	// userID, exists := c.Get("userID") // Giả sử userID được lấy từ middleware xác thực
+	// if !exists {
+	// 	utils.ErrorResponse(c, "Không tìm thấy thông tin người dùng", http.StatusUnauthorized, nil)
+	// 	return
+	// }
+
+	fileRecord := models.File{
+		FileName: file.Filename,
+		FilePath: filePath,
+		Content:  content, // Nếu cần lưu nội dung file, có thể đọc file và lưu vào đây
+		UserID:   1,
+	}
+
+	db := config.GetDB()
+
+	if err := db.Create(&fileRecord).Error; err != nil {
+		utils.ErrorResponse(c, fmt.Sprintf("Không thể lưu vào database: %s", err.Error()), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.SuccessResponse(c, "Tải lên thành công", http.StatusOK, gin.H{"file": fileRecord})
 }

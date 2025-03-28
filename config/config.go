@@ -31,12 +31,20 @@ type SCPConfig struct {
 	RemotePath string // Đường dẫn thư mục trên máy chủ đích
 }
 
+// type DatabaseConfig struct {
+// 	Project    string
+// 	Username   string
+// 	Password   string
+// 	DbName     string
+// 	Collection string
+// }
+
 type DatabaseConfig struct {
-	Project    string
-	Username   string
-	Password   string
-	DbName     string
-	Collection string
+	Project  string
+	Username string
+	Password string
+	DbName   string
+	Host     string
 }
 
 // Biến toàn cục lưu trữ cấu hình của ứng dụng

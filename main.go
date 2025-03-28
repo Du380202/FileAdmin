@@ -11,7 +11,7 @@ import (
 
 func main() {
 	config.LoadConfig()
-	config.ConnectMongoDB()
+	config.ConnectMySQL()
 
 	port := config.AppConfig.Server.Port
 	server := &http.Server{

@@ -21,3 +21,7 @@ func GetFileHandler(c *gin.Context) {
 func SearchFileHandler(c *gin.Context) {
 	service.SearchFile(c)
 }
+
+func FullTextSearchHandler(c *gin.Context) {
+	service.FullTextSearch(c)
+}

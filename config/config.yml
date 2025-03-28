@@ -12,10 +12,10 @@ scp:
 
 database:
   project: "FileSystem"
-  username: "dutran3802"
-  password: "TranDu3802"
+  username: "root"
+  password: "dutran3802"
   dbName: "FileDatabase"
-  collection: "UserCollection"
+  Host: "127.0.0.1:3306"
 
 jwt:
   secretKey: "u5cSFPfL4qttU29QZpSv2lMgUZjR3dIAPpUfPxMVNrM"

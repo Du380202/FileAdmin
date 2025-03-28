@@ -5,13 +5,11 @@ import (
 	"backend/middleware"
 	"backend/models"
 	"backend/utils"
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"gorm.io/gorm"
 )
 
 // API đăng ký user
@@ -20,7 +18,6 @@ func Register(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("error %s", err.Error()), http.StatusBadRequest, nil)
-
 		return
 	}
 
@@ -28,15 +25,13 @@ func Register(c *gin.Context) {
 	hashedPassword, err := middleware.HashPassword(req.Password)
 	if err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("Lỗi mã hóa mật khẩu: %s", err.Error()), http.StatusInternalServerError, nil)
-
 		return
 	}
 	req.Password = hashedPassword
 
-	// Thêm user vào MongoDB
-	userCollection := config.GetUserCollection()
-	_, err = userCollection.InsertOne(context.TODO(), req)
-	if err != nil {
+	// Thêm user vào MySQL
+	db := config.GetDB()
+	if err := db.Create(&req).Error; err != nil {
 		utils.ErrorResponse(c, fmt.Sprintf("Lỗi khi thêm user: %s", err.Error()), http.StatusInternalServerError, nil)
 		return
 	}
@@ -56,11 +51,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Lấy user từ MongoDB
-	userCollection := config.GetUserCollection()
+	// Lấy user từ MySQL
+	db := config.GetDB()
 	var user models.User
-	err := userCollection.FindOne(context.TODO(), bson.M{"username": req.Username}).Decode(&user)
-	if err == mongo.ErrNoDocuments {
+	if err := db.Where("username = ?", req.Username).First(&user).Error; err == gorm.ErrRecordNotFound {
 		utils.ErrorResponse(c, "Sai tài khoản hoặc mật khẩu", http.StatusUnauthorized, nil)
 		return
 	}
@@ -78,5 +72,5 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, "Đăng ký thành công", http.StatusOK, gin.H{"token": token})
+	utils.SuccessResponse(c, "Đăng nhập thành công", http.StatusOK, gin.H{"token": token})
 }
